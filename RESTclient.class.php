@@ -78,14 +78,14 @@ class RESTclient {
 			$auth = false;
 		else
 			$auth = base64_encode($user.':'.$password);
-		
+
 		$this -> appendHeader('Content-Type: '.$contenttype);
 
 		// Perform the request
 		if (in_array($method, $this -> methods)) {
 			if ($method == 'GET') {
 				// Get requests do not require a stream
-				return file_get_contents($url['scheme'].'://'.($auth == '' ? '' : $auth.'@').$url['host'].$url['path']
+				return file_get_contents($url['scheme'].'://'.($auth == '' ? '' : $auth.'@').$url['host'].( isset($url['port']) ? ':'.$url['port'] : '' ).$url['path']
 										.(isset($query) ? '?'.$query : '')
 										.(isset($url['fragment']) ? '#'.$url['fragment'] : ''));
 			} else {
@@ -98,7 +98,7 @@ class RESTclient {
 					'header'=> $this -> getHeader(),
 					'content' => $query
 				)));
-				return file_get_contents($url['scheme'].'://'.$url['host'].(isset($url['path']) ? $url['path'] : '').(isset($url['fragment']) ? '#'.$url['fragment'] : ''), false, $ctx);
+				return file_get_contents($url['scheme'].'://'.$url['host'].( isset($url['port']) ? ':'.$url['port'] : '' ).(isset($url['path']) ? $url['path'] : '').(isset($url['fragment']) ? '#'.$url['fragment'] : ''), false, $ctx);
 			}
 		} else
 			throw new Exception('Invalid HTTP method: '.$method);
