@@ -166,6 +166,11 @@ abstract class RESTserver {
 
            	return (is_array($res) && (isset($res['result']) || isset($res['error']))) ? $res : array('result' => $res);
         } catch (Exception $e) {
+			if ( class_exists('PermissionDeniedException') and
+				 class_exists('HTTP') and
+				 (get_class($e) === 'PermissionDeniedException') )
+				HTTP::sendStatusCode(403, 'Authentication Required');
+
         	return $this -> showerror ? ($this -> showtrace ? array('error' => $e -> getMessage(), 'trace' => errorTrace($e)) : array('error' => $e -> getMessage())) :  null;
         }
     }
