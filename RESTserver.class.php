@@ -168,7 +168,8 @@ abstract class RESTserver {
         } catch (Exception $e) {
 			if ( class_exists('PermissionDeniedException') and
 				 class_exists('HTTP') and
-				 (get_class($e) === 'PermissionDeniedException') )
+				 (get_class($e) === 'PermissionDeniedException') and
+				 empty($_REQUEST['_no_http_code']) )
 				HTTP::sendStatusCode(403, 'Authentication Required');
 
         	return $this -> showerror ? ($this -> showtrace ? array('error' => $e -> getMessage(), 'trace' => errorTrace($e)) : array('error' => $e -> getMessage())) :  null;
