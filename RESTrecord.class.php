@@ -2,7 +2,7 @@
 
 /**
  * Records and validates the data from a web-form
- * 
+ *
  * @author Peter-Christoph Haider (Project Leader) et al. <peter@haider.ag>
  * @package REST
  * @version 1.7 (2010-08-08)
@@ -36,16 +36,16 @@ class RESTrecord {
 	private $bolResponseUnserialize = false;
 	/** @var bool|string If response is an array, check a certain array value */
 	private $mxtResponseIsArray = false;
-	
+
 	// ============== Object's core function ==============
-	
+
 	public function __construct($data=array()) {
 		$this -> setData($data);
 	}
-	
+
 	/**
 	 * Sends the form data to a remote URL
-	 * 
+	 *
 	 * @param string $strURL
 	 * @param array $arrArguements
 	 * @param string $strMethod
@@ -58,28 +58,28 @@ class RESTrecord {
 		}
 		return $this -> strAnswer;
 	}
-	
+
 	/**
 	 * Returns the array containing all validated fields; Returns false, if validation fails
-	 * 
+	 *
 	 * @return array
 	 */
 	public function getData() {
 		return $this -> arrData;
 	}
-	
+
 	/**
 	 * Returns all validation errors
-	 * 
+	 *
 	 * @return array
 	 */
 	public function getErrors() {
 		return $this -> arrErrors;
 	}
-	
+
 	/**
 	 * Sets the form data
-	 * 
+	 *
 	 * @param array $data
 	 * @return void
 	 */
@@ -90,20 +90,20 @@ class RESTrecord {
 				$this -> arrData[$field] = $value;
 		}
 	}
-	
+
 	/**
 	 * Sets a single data field
-	 * 
+	 *
 	 * @param string $name
 	 * @param mixed $value
 	 */
 	public function setDataField($name, $value) {
 		$this -> arrData[$name] = $value;
 	}
-	
+
 	/**
 	 * Appends an additional record field
-	 * 
+	 *
 	 * @param string $name Name of the field
 	 * @param string $type Type of the Filter
 	 * @param string|bool Filter function
@@ -112,19 +112,19 @@ class RESTrecord {
 	public function addFilter($name, $type='string', $validator=null) {
 		$this -> arrFilters[$name] = array($type, $validator);
 	}
-	
-	
+
+
 	/* ------------------------ Validation functions ------------------------ */
-		
+
 	/**
-	 * Filters the local form data and initializes field types 
-	 * 
+	 * Filters the local form data and initializes field types
+	 *
 	 * @return bool
 	 */
 	public function filter() {
 		$arrData = array();
 		$arrErrors = array();
-		
+
 		foreach ($this -> arrFilters as $strField => $arrFilter) {
 			$mxtValue = $this -> initValue($this -> arrData[$strField], $arrFilter[0]);
 			$arrData[$strField] = $mxtValue;
@@ -133,25 +133,25 @@ class RESTrecord {
 					$arrErrors[] = $strField;
 			}
 		}
-		
+
 		// Update local fields and errors
 		$this -> arrErrors = $arrErrors;
 		$this -> arrFields = $arrFields;
-		
+
 		return (sizeof($this -> arrErrors) == 0);
 	}
-	
+
 	/**
 	 * Validates the value of a field
-	 * 
+	 *
 	 * The following validation functions are available:
 	 * 	- true:		Simply checks, if a value is set
 	 *  - false:	Checks, if no value is set
 	 *  - <N:		Checks, if the value is smaller than N (for numeric values) or if the length of the string is smaller than N
-	 *  - >N:		Checks, if the value is higher than N (for numeric values) or if the length of the string is higher than N 
+	 *  - >N:		Checks, if the value is higher than N (for numeric values) or if the length of the string is higher than N
 	 *  - @:		Validate an email address
 	 *  - STRING:	Checks, if the value equals the string
-	 * 
+	 *
 	 * @param string $value Name of the field
 	 * @param string $function Validation function
 	 * @return bool
@@ -163,25 +163,25 @@ class RESTrecord {
   			return $value ? false : true;
   		elseif ($function == '@')
   			return $this -> validateEmail($value);
-  		
+
   		if (!is_numeric($value))
   			$value = strlen($value);
-  			
+
   		if (substr($function, 0, 1) == '<' || substr($function, 0, 1) == '>') {
   			$check = (int) substr($function, 1);
   			if (substr($function, 0, 1) == '<')
   				return $value < $check;
   			elseif (substr($function, 0, 1) == '>')
-  				return $value > $check; 
+  				return $value > $check;
   		} else
   			return $value == $function;
 	}
-	
+
 	/**
 	 * Validates an Email-Address
-	 * 
+	 *
 	 * Based on the work of Douglas Lovell (http://www.linuxjournal.com/article/9585)
-	 * 
+	 *
 	 * @param string $email
 	 * @return bool
 	 */
@@ -210,7 +210,7 @@ class RESTrecord {
 				// domain part has two consecutive dots
 				return false;
 			} else if(!preg_match('/^(\\\\.|[A-Za-z0-9!#%&`_=\\/$\'*+?^{}|~.-])+$/', str_replace("\\\\","",$local))) {
-				// character not valid in local part unless 
+				// character not valid in local part unless
 				// local part is quoted
 				if (!preg_match('/^"(\\\\"|[^"])+"$/', str_replace("\\\\","",$local)))
 					return false;
@@ -222,20 +222,20 @@ class RESTrecord {
 			return false;
 		return true;
 	}
-	
+
 	/**
 	 * Switch the checkDNS property on and off
-	 *  
+	 *
 	 * @param bool $bolOn
 	 * @return void
 	 */
 	public function setCheckDNS($bolOn) {
 		$this -> bolCheckDNS = (bool) $bolOn;
 	}
-	
+
 	/**
 	 * Initialize a variable value
-	 * 
+	 *
 	 * @param mixed $value
 	 * @param string $type Variable type
 	 * @return mixed
@@ -255,9 +255,9 @@ class RESTrecord {
   		}
   		return (string) $value;
 	}
-	
-	/* ------------------------ Logging functions ------------------------ */ 
-	
+
+	/* ------------------------ Logging functions ------------------------ */
+
 	/**
 	 * Encodes special XML characters
 	 *
@@ -269,10 +269,10 @@ class RESTrecord {
 		$arrEncoded = array('&amp;', '&lt;', '&gt;', '&quot;', '&#39;', '&#196;', '&#214;', '&#220;', '&#228;', '&#246;', '&#252;', '&#223;');
 		return str_replace($arrRaw, $arrEncoded, $strRaw);
 	}
-	
+
 	/**
 	 * Creates an XML string of the transferred record
-	 * 
+	 *
 	 * @return string
 	 */
 	public function toXML() {
@@ -282,10 +282,10 @@ class RESTrecord {
 		$strRecord .= '</record>'."\n";
 		return $strRecord;
 	}
-	
+
 	/**
 	 * Writes the form content to an XML file
-	 * 
+	 *
 	 * @param string $strFile name of the log-file
 	 * @return void
 	 */
