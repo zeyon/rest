@@ -131,6 +131,24 @@ class RESTclient {
      public function delete($params=null, $url=null, $contenttype=null, $user=null, $password=null) {
 		return $this -> request($params, $url, 'DELETE', $contenttype, $user, $password);
      }
+     
+	/**
+	 * Initializes and checks a server result
+	 * 
+	 * @param array $res
+	 */
+	public static function initResult($res) {
+		if (!is_array($res))
+			throw new Exception('Invalid datatype. Array expected!');
+		
+		if (isset($res['error']))
+			throw new Exception('Server error: '.$res['error']);
+			
+		if (!isset($res['result']))
+			throw new Exception('Server returned no result: '.$ser);
+			
+		return $res['result'];
+	}
 }
 
 ?>

@@ -172,10 +172,36 @@ abstract class RESTserver {
 				 empty($_REQUEST['_no_http_code']) )
 				HTTP::sendStatusCode(403, 'Authentication Required');
 
-        	return $this -> showerror ? ($this -> showtrace ? array('error' => $e -> getMessage(), 'trace' => errorTrace($e)) : array('error' => $e -> getMessage())) :  null;
+        	return $this -> showerror ? ($this -> showtrace ? array('error' => $e -> getMessage(), 'trace' => $this -> errorTrace($e)) : array('error' => $e -> getMessage())) :  null;
         }
     }
 
+    public function errorTrace($e) {
+		$strTrace = '#0: '.$e -> getMessage().'; File: '.$e -> getFile().'; Line: '.$e -> getLine()."\n";
+		$i = 1;
+		foreach ($e -> getTrace() as $v) {
+			if (!(isset($v['function']) && $v['function'] == 'errorHandle')) {
+				if (isset($v['class']))
+					$strTrace .= "#$i: ".$v['class'].$v['type'].$v['function'].'(';
+				elseif (isset($v['function']))
+					$strTrace .= "#$i: ".$v['function'].'(';
+				else
+					$strTrace .= "#$i: ";
+				
+				if (isset($v['args']) && isset($v['function'])) {
+					$parts = array();
+					foreach($v['args'] as $arg)
+						$parts[] = KickstartErrorArg($arg);
+					$strTrace .= implode(',', $parts).') ';
+				}
+				if (isset($v['file']) && isset($v['line']))
+					$strTrace .= '; File: '.$v['file'].'; Line: '.$v['line']."\n";
+				$i++;
+			}
+		}
+		return $strTrace;
+	}
+    
     /**
      * Dispatches the function call and returns the result as JSON string
      *
