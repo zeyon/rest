@@ -191,7 +191,7 @@ abstract class RESTserver {
 				if (isset($v['args']) && isset($v['function'])) {
 					$parts = array();
 					foreach($v['args'] as $arg)
-						$parts[] = KickstartErrorArg($arg);
+						$parts[] = $this -> errorArg($arg);
 					$strTrace .= implode(',', $parts).') ';
 				}
 				if (isset($v['file']) && isset($v['line']))
@@ -200,6 +200,31 @@ abstract class RESTserver {
 			}
 		}
 		return $strTrace;
+	}
+	
+	/**
+	 * Converts any function arguement into a string
+	 * 
+	 * @param mixed $arg
+	 * @return string
+	 */
+	public function errorArg($arg, $depth=true) {
+		if (is_string($arg))
+			return('"'.str_replace("\n", '', $arg ).'"');
+		elseif (is_bool($arg))
+			return $arg ? 'true' : 'false';
+		elseif (is_object($arg))
+			return 'object('.get_class($arg).')';
+		elseif (is_resource($arg))
+			return 'resource('.get_resource_type($arg).')';
+		elseif (is_array($arg)) {
+			$parts = array();
+			if ($depth)
+				foreach ($arg as $k => $v)
+					$parts[] = $k.' => '.$this -> errorArg($v, false);
+			return 'array('.implode(', ', $parts).')';
+		} elseif ($depth)
+			return var_export($arg, true);
 	}
     
     /**
