@@ -187,7 +187,7 @@ abstract class RESTserver {
 					$strTrace .= "#$i: ".$v['function'].'(';
 				else
 					$strTrace .= "#$i: ";
-				
+
 				if (isset($v['args']) && isset($v['function'])) {
 					$parts = array();
 					foreach($v['args'] as $arg)
@@ -201,10 +201,10 @@ abstract class RESTserver {
 		}
 		return $strTrace;
 	}
-	
+
 	/**
 	 * Converts any function arguement into a string
-	 * 
+	 *
 	 * @param mixed $arg
 	 * @return string
 	 */
@@ -226,7 +226,7 @@ abstract class RESTserver {
 		} elseif ($depth)
 			return var_export($arg, true);
 	}
-    
+
     /**
      * Dispatches the function call and returns the result as JSON string
      *
@@ -275,17 +275,19 @@ abstract class RESTserver2 extends RESTserver {
 	 *
 	 * Works like {RESTserver::initParam()} but does not cast NULL values.
 	 *
-	 * @param mixed $value
+	 * @param array $var
+	 * @param string $key
 	 * @param string $type Variable type
 	 * @param mixed $default Default value
 	 * @return mixed
 	 */
 	public function initParam2($var, $key, $type='string', $default='', $required=true) {
-		if ( !isset($var[$key]) and !array_key_exists($key, $var) )
-			if ($required)
+		if ( !isset($var[$key]) or !array_key_exists($key, $var) ) {
+			if ( $required )
 				throw new Exception('Parameter "'.$key.'" not found!');
 			else
 				return $default;
+		}
 
 		$value = $var[$key];
 		if ( $value === null )
