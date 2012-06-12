@@ -51,7 +51,13 @@ class RESTvoidResult {
  */
 abstract class RESTserver {
 
-	/** @var array The array containig the REST services */
+	/**
+	 * @var array An associative array mapping actions to their definitions.
+	 *     Action format:    { <name> => [ <method>, <function>, <parameters> ] }
+	 *       Methods:        POST, GET, REQUEST
+	 *     Parameter format: [ <name>, <type>, <default> = '', <required> = true ]
+	 *       Types:          int, float, bool, array, object, string
+	 */
 	public $actions = array();
 	/** @var string The variable name specifying the command variable (sometimes "cmd" or "do") */
 	private $cmdVar = 'do';
