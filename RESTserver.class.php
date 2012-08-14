@@ -143,6 +143,10 @@ abstract class RESTserver {
             	case 'POST':
             		$source = $_POST;
             		break;
+            	case 'PUT':
+            	case 'DELETE':
+            		parse_str(file_get_contents('php://input'), $source);
+            		break;
             	default:
             		$source = $_REQUEST;
             		break;
