@@ -72,12 +72,6 @@ abstract class RESTserver {
 	/** @var bool Also adds a trace to the error message (see $showerror) */
 	public $showtrace = true;
 
-	protected $initParamFunction = null;
-
-	public function __construct() {
-		$this->initParamFunction = array($this, 'initParam');
-	}
-
 	/**
 	 * Initialize a variable value.
 	 *
@@ -181,12 +175,12 @@ abstract class RESTserver {
 			if ( sizeof($functionSpec) > 0 ) {
 				foreach ($functionSpec[0] as $param) {
 					if ( !is_array($param) ) {
-						$parameters[] = call_user_func($this->initParamFunction, $source, $param);
+						$parameters[] = $this->initParam($source, $param);
 					} else {
 						$type    = ( (isset($param[1]) and array_key_exists(1, $param)) ? $param[1] : 'string' );
 						$default = ( (isset($param[2]) and array_key_exists(2, $param)) ? $param[2] : null );
 						$required = ( isset($param[3]) ? (bool)$param[3] : true );
-						$parameters[] = call_user_func($this->initParamFunction, $source, $param[0], $type, $default, $required);
+						$parameters[] = $this->initParam($source, $param[0], $type, $default, $required);
 					}
 				}
 			}
@@ -304,64 +298,6 @@ abstract class RESTserver {
 	 */
 	public function auth() {
 		return true;
-	}
-
-}
-
-abstract class RESTserver2 extends RESTserver {
-
-	public function __construct() {
-		$this->initParamFunction = array($this, 'initParam2');
-	}
-
-	/**
-	 * Initialize a variable value.
-	 *
-	 * Works like {RESTserver::initParam()} but does not cast NULL values.
-	 *
-	 * @param array $var
-	 * @param string $key
-	 * @param string $type Variable type
-	 * @param mixed $default Default value
-	 * @return mixed
-	 */
-	public function initParam2($var, $key, $type='string', $default='', $required=true) {
-		if ( !isset($var[$key]) or !array_key_exists($key, $var) ) {
-			if ( $required )
-				throw new Exception('Parameter "'.$key.'" not found!');
-			else
-				return $default;
-		}
-
-		$value = $var[$key];
-		if ( $value === null )
-			return null;
-
-		switch ( $type ) {
-			case 'int':
-				if ( is_numeric($value) )
-					return (int)$value;
-				else
-					return ( $default === null ? null : (int)$default );
-
-			case 'float':
-				if ( is_numeric($value) )
-					return (float)$value;
-				else
-					return ( $default === null ? null : (float)$default );
-
-			case 'array':
-				return is_array($value) ? $value : array();
-
-			case 'bool':
-				return (bool)$value;
-
-			case 'object':
-				return is_object($value) ? $value : null;
-
-		}
-
-		return (string)$value;
 	}
 
 }
