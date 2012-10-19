@@ -79,34 +79,40 @@ abstract class RESTserver {
 	}
 
 	/**
-	 * Initialize a variable value
+	 * Initialize a variable value.
 	 *
-	 * @param mixed $value
+	 * Works like {RESTserver::initParam()} but does not cast NULL values.
+	 *
+	 * @param array $var
+	 * @param string $key
 	 * @param string $type Variable type
 	 * @param mixed $default Default value
 	 * @return mixed
 	 */
-	public function initParam($var, $key=null, $type='string', $default=null, $required=true) {
-		if ( is_null($key) )
-			$value = $var;
-		else {
-			if ( !isset($var[$key]) and !array_key_exists($key, $var ) )
-				if ( $required )
-					throw new Exception('Parameter "'.$key.'" not found!');
-				else
-					return $this->initParam($default);
-
-			$value = $var[$key];
-			if ( $value === null )
-				return null;
+	public function initParam($var, $key, $type='string', $default='', $required=true) {
+		if ( !isset($var[$key]) or !array_key_exists($key, $var) ) {
+			if ( $required )
+				throw new Exception('Parameter "'.$key.'" not found!');
+			else
+				return $default;
 		}
+
+		$value = $var[$key];
+		if ( $value === null )
+			return null;
 
 		switch ( $type ) {
 			case 'int':
-				return (int) $value;
+				if ( is_numeric($value) )
+					return (int)$value;
+				else
+					return ( $default === null ? null : (int)$default );
 
 			case 'float':
-				return (float) $value;
+				if ( is_numeric($value) )
+					return (float)$value;
+				else
+					return ( $default === null ? null : (float)$default );
 
 			case 'array':
 				return is_array($value) ? $value : array();
@@ -116,6 +122,7 @@ abstract class RESTserver {
 
 			case 'object':
 				return is_object($value) ? $value : null;
+
 		}
 
 		return (string)$value;
