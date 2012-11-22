@@ -123,91 +123,136 @@ abstract class RESTserver {
 	}
 
 	/**
-	 * Executes an API function.
+	 * Executes an API function, possibly throwing an exception on errors.
 	 *
 	 * @param string $command Optional. The API command to run. Default is NULL.
 	 * @param array $source Optional. An associative array mapping parameter
 	 *     names to their values. Default is NULL.
 	 * @return mixed
+	 * @see dispatch()
+	 */
+	public function rawDispatch($command = null, array $source = null) {
+		// Check for valid commands
+		if ( $command !== null )
+			;
+		elseif ( isset($_REQUEST[$this->cmdVar]) )
+			$command = $_REQUEST[$this->cmdVar];
+		else
+			throw new Exception('No command specified!');
+
+		if ( !isset($this->actions[$command]) )
+			throw new Exception('Unknown command: '.$command);
+
+		// array(COMMAND => array(METHOD[post, get, all], FUNCTION, PARAM1, PARAM2, ...))
+		$functionSpec = $this->actions[$command];
+		$method       = strtoupper(array_shift($functionSpec));
+		$function     = array_shift($functionSpec);
+
+		if ( $source === null ) {
+			switch( $method ) {
+				case 'GET':
+					$source = $_GET;
+					break;
+				case 'POST':
+					$source = $_POST;
+					break;
+			case 'PUT':
+			case 'DELETE':
+				parse_str(file_get_contents('php://input'), $source);
+				break;
+				default:
+					$source = $_REQUEST;
+					break;
+			}
+		}
+
+		// Get the function parameters
+		$parameters = array();
+		if ( sizeof($functionSpec) > 0 ) {
+			foreach ($functionSpec[0] as $param) {
+				if ( !is_array($param) ) {
+					$parameters[] = $this->initParam($source, $param);
+				} else {
+					$type    = ( (isset($param[1]) and array_key_exists(1, $param)) ? $param[1] : 'string' );
+					$default = ( (isset($param[2]) and array_key_exists(2, $param)) ? $param[2] : null );
+					$required = ( isset($param[3]) ? (bool)$param[3] : true );
+					$parameters[] = $this->initParam($source, $param[0], $type, $default, $required);
+				}
+			}
+		}
+
+		$res = call_user_func_array(array($this, $this->prefix.$function), $parameters);
+
+		// Check if the result should be wrapped into a JSON-encoded object
+		// (by "runJSON()").
+		if ( $res instanceof RESTvoidResult )
+			return null;
+
+		return (is_array($res) && (isset($res['result']) || isset($res['error']))) ? $res : array('result' => $res);
+	}
+
+	/**
+	 * Converts an exception to result data suitable for output as JSON.
+	 *
+	 * @param Exception $e
+	 * @return array|null Returns NULL if {@link showerror} is FALSE, otherwise
+	 *     an array with an item "error", and an item "trace" if {@link showtrace}
+	 *     is set. Can be overridden to return other data.
+	 * @see handleException()
+	 */
+	protected function exceptionToResult(Exception $e) {
+		if ( !$this->showerror )
+			return null;
+		elseif ( $this->showtrace )
+			return array('error' => $e->getMessage(), 'trace' => $this->errorTrace($e));
+		else
+			return array('error' => $e->getMessage());
+	}
+
+	/**
+	 * Handles an exception produced by {@link dispatch()}.
+	 *
+	 * This method may be overridden to e.g. rethrow the exception instead of
+	 * converting it to result data.
+	 *
+	 * @param string $command Optional. The API command to run. Default is NULL.
+	 * @param array $source Optional. An associative array mapping parameter
+	 *     names to their values. Default is NULL.
+	 * @return mixed Returns data obtained from {@link exceptionToResult()}.
+	 * @see exceptionToResult()
+	 */
+	protected function handleException($command = null, array $source = null, Exception $e) {
+		$standaloneCall = ( ($command === null) and ($source === null) );
+
+		if ( !$standaloneCall and
+			 class_exists('PermissionDeniedException') and
+			 class_exists('HTTP') and
+			 (get_class($e) === 'PermissionDeniedException') and
+			 empty($_REQUEST['_no_http_code']) )
+			HTTP::sendStatusCode(403, 'Authentication Required');
+
+		return $this->exceptionToResult($e);
+	}
+
+	/**
+	 * Executes an API function by calling {@link rawDispatch()}.
+	 *
+	 * If an exception was thrown during execution, {@link handleException()}
+	 * will be called.
+	 *
+	 * @param string $command Optional. The API command to run. Default is NULL.
+	 * @param array $source Optional. An associative array mapping parameter
+	 *     names to their values. Default is NULL.
+	 * @return mixed
+	 * @uses rawDispatch()
+	 * @uses handleException()
 	 */
 	public function dispatch($command = null, array $source = null) {
-		$standaloneCall = true;
 
 		try {
-			// Check for valid commands
-			if ( $command !== null )
-				$standaloneCall = false;
-			elseif ( isset($_REQUEST[$this->cmdVar]) )
-				$command = $_REQUEST[$this->cmdVar];
-			else
-				throw new Exception('No command specified!');
-
-			if ( !isset($this->actions[$command]) )
-				throw new Exception('Unknown command: '.$command);
-
-			// array(COMMAND => array(METHOD[post, get, all], FUNCTION, PARAM1, PARAM2, ...))
-			$functionSpec = $this->actions[$command];
-			$method       = strtoupper(array_shift($functionSpec));
-			$function     = array_shift($functionSpec);
-
-			if ( $source === null ) {
-				switch( $method ) {
-					case 'GET':
-						$source = $_GET;
-						break;
-					case 'POST':
-						$source = $_POST;
-						break;
-				case 'PUT':
-				case 'DELETE':
-					parse_str(file_get_contents('php://input'), $source);
-					break;
-					default:
-						$source = $_REQUEST;
-						break;
-				}
-			} else {
-				$standaloneCall = false;
-			}
-
-			// Get the function parameters
-			$parameters = array();
-			if ( sizeof($functionSpec) > 0 ) {
-				foreach ($functionSpec[0] as $param) {
-					if ( !is_array($param) ) {
-						$parameters[] = $this->initParam($source, $param);
-					} else {
-						$type    = ( (isset($param[1]) and array_key_exists(1, $param)) ? $param[1] : 'string' );
-						$default = ( (isset($param[2]) and array_key_exists(2, $param)) ? $param[2] : null );
-						$required = ( isset($param[3]) ? (bool)$param[3] : true );
-						$parameters[] = $this->initParam($source, $param[0], $type, $default, $required);
-					}
-				}
-			}
-
-			$res = call_user_func_array(array($this, $this->prefix.$function), $parameters);
-
-			// Check if the result should be wrapped into a JSON-encoded object
-			// (by "runJSON()").
-			if ( $res instanceof RESTvoidResult )
-				return null;
-
-			return (is_array($res) && (isset($res['result']) || isset($res['error']))) ? $res : array('result' => $res);
-
+			$this->rawDispatch($command, $source);
 		} catch (Exception $e) {
-			if ( !$standaloneCall and
-				 class_exists('PermissionDeniedException') and
-				 class_exists('HTTP') and
-				 (get_class($e) === 'PermissionDeniedException') and
-				 empty($_REQUEST['_no_http_code']) )
-				HTTP::sendStatusCode(403, 'Authentication Required');
-
-			if ( !$this->showerror )
-				return null;
-			elseif ( $this->showtrace )
-				return array('error' => $e->getMessage(), 'trace' => $this->errorTrace($e));
-			else
-				return array('error' => $e->getMessage());
+			return $this->handleException($command, $source, $e);
 		}
 	}
 
