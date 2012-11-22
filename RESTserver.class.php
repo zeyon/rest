@@ -180,7 +180,6 @@ abstract class RESTserver {
 				}
 			}
 		}
-
 		$res = call_user_func_array(array($this, $this->prefix.$function), $parameters);
 
 		// Check if the result should be wrapped into a JSON-encoded object
@@ -248,9 +247,8 @@ abstract class RESTserver {
 	 * @uses handleException()
 	 */
 	public function dispatch($command = null, array $source = null) {
-
 		try {
-			$this->rawDispatch($command, $source);
+			return $this->rawDispatch($command, $source);
 		} catch (Exception $e) {
 			return $this->handleException($command, $source, $e);
 		}
