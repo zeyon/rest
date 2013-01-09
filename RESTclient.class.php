@@ -16,6 +16,7 @@ class RESTclient {
 	private $header = array();
 	private $methods = array('GET', 'POST', 'PUT', 'DELETE');
 	private $method = 'GET';
+	public $protocol_version = false; // Use the default protocol version
 
 	public function __construct($url=null, $user=null, $password=null) {
 		$this -> setURL($url);
@@ -93,11 +94,16 @@ class RESTclient {
 				if ($auth)
 					$this -> appendHeader("Authorization: Basic $auth");
 				$this->appendHeader('Content-Length: '.strlen($query));
-				$ctx = stream_context_create(array('http' => array(
-					'method' => $method,
-					'header'=> $this -> getHeader(),
-					'content' => $query
-				)));
+				// TIPP: Add this to your script if you ever encounter the ugly "417 - Expectation Failed" error message
+				//$this->appendHeader('Expect:');
+				$ctx = stream_context_create(
+					array('http' => array(
+						'method' => $method,
+						'header'=> $this -> getHeader(),
+						'content' => $query
+						) + $this->protocol_version ? array('protocol_version' => $this->protocol_version) : array()
+					)
+				);
 				return file_get_contents($url['scheme'].'://'.$url['host'].( isset($url['port']) ? ':'.$url['port'] : '' ).(isset($url['path']) ? $url['path'] : '').(isset($url['fragment']) ? '#'.$url['fragment'] : ''), false, $ctx);
 			}
 		} else
