@@ -14,12 +14,18 @@ class RESTclient {
 	private $password = null;
 	private $url = null;
 	private $header = array();
-	private $methods = array('GET', 'POST', 'PUT', 'DELETE');
+
+	private $methods = array(
+		'GET'    => true,
+		'POST'   => true,
+		'PUT'    => true,
+		'DELETE' => true,
+	);
 	private $method = 'GET';
 
 	public $protocol_version = false; // Use the default protocol version
 
-	public function __construct($url=null, $user=null, $password=null) {
+	public function __construct($url = null, $user = null, $password = null) {
 		$this->setURL($url);
 		$this->setAuthentication($user, $password);
 	}
@@ -39,18 +45,24 @@ class RESTclient {
 		$this->header[] = preg_replace('#$#', '', $strHeader);
 	}
 
-	public function setHeader($arrHeader) {
-		if ( is_array($arrHeader) )
-			$this->header = $arrHeader;
-		else
-			throw new Exception('Invalid variable type. Expecting array.');
+	public function setHeaders(array $headers) {
+		$this->header = $headers;
+	}
+
+	/**
+	 * @deprecated since 2013-01-10
+	 * @see setHeaders()
+	 */
+	public function setHeader(array $headers) {
+		$this->header = $headers;
 	}
 
 	public function setMethod($method) {
-		if ( in_array($method = strtoupper($method), $this->methods) )
-			$this->method = $method;
-		else
+		$method = strtoupper($method);
+		if ( empty($this->methods[$method]) )
 			return false;
+
+		$this->method = $method;
 		return true;
 	}
 
@@ -66,17 +78,19 @@ class RESTclient {
 
 	/* --------------- Request functions --------------- */
 
-	public function request($params=null, $url=null, $method=null, $contenttype='text/plain', $user=null, $password=null) {
+	public function request($params = null, $url = null, $method = null, $contenttype = 'text/plain', $user = null, $password = null) {
 		// Initialize parameters
-		$url = isset($url) ? $url : $this->url;
-		$url = parse_url($url);
+		$url = parse_url( $url === null ? $this->url : $url );
+
 		$query = isset($url['query']) ? $url['query'] : null;
 		if ( is_array($params) )
-			$query = (is_null($query) ? '' : '&').http_build_query($params, null, '&');
-		$method = strtoupper(is_null($method) ? $this->method : $method);
-		$user = isset($url['username']) ? $url['username'] : (is_null($user) ? $this->user : $user);
-		$password = isset($url['password']) ? $url['password'] : ( is_null($password) ? $this->password : $password );
-		if ( is_null($user) || is_null($password) )
+			$query = ( $query === null ? '' : '&').http_build_query($params, null, '&');
+
+		$method = strtoupper( $method === null ? $this->method : $method );
+		$user = isset($url['username']) ? $url['username'] : ( $user === null ? $this->user : $user );
+		$password = isset($url['password']) ? $url['password'] : ( $password === null ? $this->password : $password );
+
+		if ( ($user === null) || ($password === null) )
 			$auth = false;
 		else
 			$auth = base64_encode($user.':'.$password);
@@ -85,7 +99,7 @@ class RESTclient {
 
 		// Perform the request
 
-		if ( !in_array($method, $this->methods) )
+		if ( empty($this->methods[$method]) )
 			throw new Exception('Invalid HTTP method: '.$method);
 
 		if ( $method == 'GET' ) {
@@ -111,37 +125,38 @@ class RESTclient {
 					'content' => $query
 				) + ( $this->protocol_version ? array('protocol_version' => $this->protocol_version) : array() )
 			));
+
 			return file_get_contents($url['scheme'].'://'.$url['host'].( isset($url['port']) ? ':'.$url['port'] : '' ).(isset($url['path']) ? $url['path'] : '').(isset($url['fragment']) ? '#'.$url['fragment'] : ''), false, $ctx);
 		}
 	}
 
-     /**
-      * Convenience method wrapping a commom POST call
-      */
-     public function post($params=null, $url=null, $contenttype='application/x-www-form-urlencoded', $user=null, $password=null) {
+	/**
+	 * Convenience method wrapping a commom POST call
+	 */
+	public function post($params = null, $url = null, $contenttype = 'application/x-www-form-urlencoded', $user = null, $password = null) {
 		return $this->request($params, $url, 'POST', $contenttype, $user, $password);
-     }
+	}
 
-     /**
-      * Convenience method wrapping a commom PUT call
-      */
-     public function put($params=null, $url=null, $contenttype=null, $user=null, $password=null) {
+	/**
+	 * Convenience method wrapping a commom PUT call
+	 */
+	public function put($params = null, $url = null, $contenttype = null, $user = null, $password = null) {
 		return $this->request($params, $url, 'PUT', $contenttype, $user, $password);
-     }
+	}
 
-     /**
-      * Convenience method wrapping a commom GET call
-      */
-     public function get($params=null, $url=null, $contenttype=null, $user=null, $password=null) {
+	/**
+	 * Convenience method wrapping a commom GET call
+	 */
+	public function get($params = null, $url = null, $contenttype = null, $user = null, $password = null) {
 		return $this->request($params, $url, 'GET', $contenttype, $user, $password);
-     }
+	}
 
-     /**
-      * Convenience method wrapping a commom delete call
-      */
-     public function delete($params=null, $url=null, $contenttype=null, $user=null, $password=null) {
+	/**
+	 * Convenience method wrapping a commom delete call
+	 */
+	public function delete($params = null, $url = null, $contenttype = null, $user = null, $password = null) {
 		return $this->request($params, $url, 'DELETE', $contenttype, $user, $password);
-     }
+	}
 
 	/**
 	 * Initializes and checks a server result
@@ -151,15 +166,14 @@ class RESTclient {
 	public static function initResult($res) {
 		if ( !is_array($res) )
 			throw new Exception('Invalid datatype. Array expected!');
-
-		if ( isset($res['error']) )
+		elseif ( isset($res['error']) )
 			throw new Exception('Server error: '.$res['error']);
-
-		if ( !isset($res['result']) )
+		elseif ( !isset($res['result']) )
 			throw new Exception('Server returned no result: '.$ser);
 
 		return $res['result'];
 	}
+
 }
 
 ?>
