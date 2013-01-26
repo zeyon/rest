@@ -84,6 +84,18 @@ abstract class RESTserver {
 	 * @return mixed
 	 */
 	public function initParam($var, $key, $type='string', $default='', $required=true) {
+		if ($type == 'file') {
+			if ( !isset($_FILES[$key]) or !array_key_exists($key, $_FILES) ) {
+				if ( $required )
+					throw new Exception('File "'.$key.'" not found!');
+				else
+					return null;
+			}
+			if (!is_readable($_FILE['data']['tmp_name']))
+				throw new Exception('Error reading uploaded file "'.$key.'"!');
+			return $_FILES[$key];
+		}
+
 		if ( !isset($var[$key]) or !array_key_exists($key, $var) ) {
 			if ( $required )
 				throw new Exception('Parameter "'.$key.'" not found!');
@@ -116,6 +128,9 @@ abstract class RESTserver {
 
 			case 'object':
 				return is_object($value) ? $value : null;
+
+			case false:
+				return $value;
 
 		}
 
@@ -160,9 +175,9 @@ abstract class RESTserver {
 			case 'DELETE':
 				parse_str(file_get_contents('php://input'), $source);
 				break;
-				default:
-					$source = $_REQUEST;
-					break;
+			default:
+				$source = $_REQUEST;
+				break;
 			}
 		}
 
