@@ -118,7 +118,7 @@ abstract class RESTserver {
 			return $_FILES[$key];
 		}
 
-		if ( !isset($var[$key]) or !array_key_exists($key, $var) ) {
+		if ( !isset($var[$key]) and !array_key_exists($key, $var) ) {
 			if ( $required )
 				throw new Exception('Parameter "'.$key.'" not found!');
 			else
