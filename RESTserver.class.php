@@ -1,5 +1,14 @@
 <?php
 
+if ( !defined('UPLOAD_ERR_NO_TMP_DIR') ) // Introduced in PHP 5.0.3
+	define('UPLOAD_ERR_NO_TMP_DIR', 6);
+
+if ( !defined('UPLOAD_ERR_CANT_WRITE') ) // Introduced in PHP 5.1.0
+	define('UPLOAD_ERR_CANT_WRITE', 7);
+
+if ( !defined('UPLOAD_ERR_EXTENSION') ) // Introduced in PHP 5.2.0
+	define('UPLOAD_ERR_EXTENSION', 8);
+
 /**
  * Instantiate this class and return the object to indicate that a web service function does not return any data to be JSON-encoded.
  *
@@ -51,6 +60,17 @@ class RESTvoidResult {
  */
 abstract class RESTserver {
 
+	static private $uploadErrors = array(
+		UPLOAD_ERR_OK         => 'Upload OK',
+		UPLOAD_ERR_INI_SIZE   => 'The uploaded file exceeds the configured maximum allowed file size.',
+		UPLOAD_ERR_FORM_SIZE  => 'The uploaded file exceeds the maximum allowed file size specified in the HTML form.',
+		UPLOAD_ERR_PARTIAL    => 'The uploaded file was only partially uploaded.',
+		UPLOAD_ERR_NO_FILE    => 'No file was uploaded.',
+		UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder.',
+		UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk.',
+		UPLOAD_ERR_EXTENSION  => 'A PHP extension stopped the file upload.',
+	);
+
 	/**
 	 * @var array An associative array mapping actions to their definitions.
 	 *     Action format:    { <name> => [ <method>, <function>, <parameters> ] }
@@ -75,8 +95,6 @@ abstract class RESTserver {
 	/**
 	 * Initialize a variable value.
 	 *
-	 * Works like {RESTserver::initParam()} but does not cast NULL values.
-	 *
 	 * @param array $var
 	 * @param string $key
 	 * @param string $type Variable type
@@ -84,15 +102,19 @@ abstract class RESTserver {
 	 * @return mixed
 	 */
 	public function initParam($var, $key, $type='string', $default='', $required=true) {
-		if ($type == 'file') {
-			if ( !isset($_FILES[$key]) or !array_key_exists($key, $_FILES) ) {
+		if ( $type === 'file' ) {
+			if ( empty($_FILES[$key]['tmp_name']) ) {
 				if ( $required )
 					throw new Exception('File "'.$key.'" not found!');
 				else
 					return null;
-			}
-			if (!is_readable($_FILE['data']['tmp_name']))
+			} elseif ( isset($_FILES[$key]['error']) and ($_FILES[$key]['error'] !== UPLOAD_ERR_OK) ) {
+				$errorCode = $_FILES[$key]['error'];
+				throw new Exception('Bad data encountered in upload "'.$key.'" ['.( isset($uploadErrors[$errorCode]) ? $uploadErrors[$errorCode] : 'error '.$errorCode ).']. Please try again.');
+			} elseif ( !is_uploaded_file($_FILES[$key]['tmp_name']) or !is_readable($_FILES[$key]['tmp_name']) ) {
 				throw new Exception('Error reading uploaded file "'.$key.'"!');
+			}
+
 			return $_FILES[$key];
 		}
 
