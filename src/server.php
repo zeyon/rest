@@ -92,6 +92,9 @@ abstract class RESTserver {
 	/** @var bool Also adds a trace to the error message (see $showerror) */
 	public $showtrace = true;
 
+	/** @var string How to convert error trace. (string | array)*/
+	public $tracetype = 'string';
+
 	/**
 	 * Initialize a variable value.
 	 *
@@ -240,7 +243,7 @@ abstract class RESTserver {
 		if ( !$this->showerror )
 			return null;
 		elseif ( $this->showtrace )
-			return array('error' => $e->getMessage(), 'trace' => $this->errorTrace($e));
+			return array('error' => $e->getMessage(), 'trace' => $this->errorTrace($e, $this->tracetype));
 		else
 			return array('error' => $e->getMessage());
 	}
@@ -291,12 +294,24 @@ abstract class RESTserver {
 		}
 	}
 
-	public function errorTrace($e) {
-		$strTrace = '#0: '.$e->getMessage().'; File: '.$e->getFile().'; Line: '.$e->getLine()."\n";
+	public function errorTrace($e, $tracetype='string') {
+		$trace = '#0: '.$e->getMessage().'; File: '.$e->getFile().'; Line: '.$e->getLine()."\n";
 		$i = 1;
+
+		function addString(&$t, $a) { $t .= $a; }
+		function addArray(&$t, $a) { $t[] = $a; }
+
+		$method = 'addString';
+		if ( $tracetype === 'array' ) {
+			$method = 'addArray';
+
+			$trace = array($trace);
+		}
 
 		foreach ($e->getTrace() as $v) {
 			if ( !(isset($v['function']) && $v['function'] == 'errorHandle') ) {
+				$strTrace = '';
+
 				if ( isset($v['class']) )
 					$strTrace .= "#$i: ".$v['class'].$v['type'].$v['function'].'(';
 				elseif ( isset($v['function']) )
@@ -312,11 +327,14 @@ abstract class RESTserver {
 				}
 				if ( isset($v['file']) && isset($v['line']) )
 					$strTrace .= '; File: '.$v['file'].'; Line: '.$v['line']."\n";
+
 				$i++;
+
+				$method($trace, $strTrace);
 			}
 		}
 
-		return $strTrace;
+		return $trace;
 	}
 
 	/**
