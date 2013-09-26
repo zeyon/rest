@@ -263,12 +263,19 @@ abstract class RESTserver {
 	protected function handleException($command = null, array $source = null, Exception $e) {
 		$standaloneCall = ( ($command === null) and ($source === null) );
 
-		if ( !$standaloneCall and
-			 class_exists('PermissionDeniedException') and
-			 class_exists('HTTP') and
-			 (get_class($e) === 'PermissionDeniedException') and
-			 empty($_REQUEST['_no_http_code']) )
-			HTTP::sendStatusCode(403, 'Authentication Required');
+		if ( class_exists('HTTP') and
+		     empty($_REQUEST['_no_http_code']) ) {
+			switch ( get_class($e) ) {
+				case 'PermissionDeniedException':
+					if ( !$standaloneCall )
+						HTTP::sendStatusCode(403, 'Authentication Required');
+					break;
+
+				case 'PageNotFoundException':
+					HTTP::sendStatus404NotFound();
+					break;
+			}
+		}
 
 		return $this->exceptionToResult($e);
 	}
