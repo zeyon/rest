@@ -10,6 +10,7 @@
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  */
 class RESTclient {
+
 	private $user = null;
 	private $password = null;
 	private $url = null;
@@ -34,19 +35,23 @@ class RESTclient {
 
 	public function setURL($url) {
 		$this->url = $url;
+		return $this;
 	}
 
 	public function setAuthentication($user, $password) {
 		$this->user = $user;
 		$this->password = $password;
+		return $this;
 	}
 
 	public function appendHeader($strHeader) {
 		$this->header[] = preg_replace('#$#', '', $strHeader);
+		return $this;
 	}
 
 	public function setHeaders(array $headers) {
 		$this->header = $headers;
+		return $this;
 	}
 
 	/**
@@ -55,6 +60,7 @@ class RESTclient {
 	 */
 	public function setHeader(array $headers) {
 		$this->header = $headers;
+		return $this;
 	}
 
 	public function setMethod($method) {
