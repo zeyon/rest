@@ -1,9 +1,6 @@
 phpREST - A simple utility library to send and receive HTTP requests
 ====================================================================
 
-Purpose
--------
-
 Main components
 ---------------
 
