@@ -1,5 +1,5 @@
 <?php
-namespace 'REST';
+namespace REST;
 
 /**
  * Records and validates the data from a web-form

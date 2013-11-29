@@ -1,5 +1,5 @@
 <?php
-namespace 'REST';
+namespace REST;
 
 if ( !defined('UPLOAD_ERR_NO_TMP_DIR') ) // Introduced in PHP 5.0.3
 	define('UPLOAD_ERR_NO_TMP_DIR', 6);

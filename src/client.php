@@ -1,5 +1,5 @@
 <?php
-namespace 'REST':
+namespace REST;
 
 /**
  * A simple REST client to perform REST request
