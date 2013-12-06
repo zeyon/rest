@@ -16,9 +16,15 @@ The `Server` class allows you to receive and process incoming HTTP requests.
 *TODO: Router class for REST-style routes*
 
 
-### Record ###
+### Validator ###
 
-Utility class for form validation
+Utility class for form validation.
+
+
+### Localizer ###
+
+* Loads language variables from a YAML, JSON or PHP file and caches generated files
+* Allows you to query and insert language variables
 
 
 Example

@@ -11,6 +11,63 @@ if ( !defined('UPLOAD_ERR_EXTENSION') ) // Introduced in PHP 5.2.0
 	define('UPLOAD_ERR_EXTENSION', 8);
 
 /**
+ * Returns an error trace
+ *
+ * @param Exception $e
+ * @return string
+ */
+function errorTrace($e) {
+	$strTrace = '#0: '.$e->getMessage().'; File: '.$e->getFile().'; Line: '.$e->getLine()."\n";
+	$i = 1;
+	foreach ($e->getTrace() as $v) {
+		if (!(isset($v['function']) && $v['function'] == 'errorHandle')) {
+			if (isset($v['class']))
+				$strTrace .= "#$i: ".$v['class'].$v['type'].$v['function'].'(';
+			elseif (isset($v['function']))
+				$strTrace .= "#$i: ".$v['function'].'(';
+			else
+				$strTrace .= "#$i: ";
+
+			if (isset($v['args']) && isset($v['function'])) {
+				$parts = array();
+				foreach($v['args'] as $arg)
+					$parts[] = KickstartErrorArg($arg);
+				$strTrace .= implode(',', $parts).') ';
+			}
+			if (isset($v['file']) && isset($v['line']))
+				$strTrace .= '; File: '.$v['file'].'; Line: '.$v['line']."\n";
+			$i++;
+		}
+	}
+	return $strTrace;
+}
+
+/**
+ * Converts any function arguement into a string
+ *
+ * @param mixed $arg
+ * @return string
+ */
+function errorArg($arg, $depth=true) {
+	if (is_string($arg))
+		return('"'.str_replace("\n", '', $arg ).'"');
+	elseif (is_bool($arg))
+		return $arg ? 'true' : 'false';
+	elseif (is_object($arg))
+		return 'object('.get_class($arg).')';
+	elseif (is_resource($arg))
+		return 'resource('.get_resource_type($arg).')';
+	elseif (is_array($arg)) {
+		$parts = array();
+		if ($depth)
+			foreach ($arg as $k => $v)
+				$parts[] = $k.' => '.KickstartErrorArg($v, false);
+		return 'array('.implode(', ', $parts).')';
+	} elseif ($depth)
+		return var_export($arg, true);
+}
+
+/**
  * Instantiate this class and return the object to indicate that a web service function does not return any data to be JSON-encoded.
  *
  * @see RESTserver
@@ -79,7 +136,17 @@ abstract class Server {
 	 *     Parameter format: [ <name>, <type>, <default> = '', <required> = true ]
 	 *       Types:          int, float, bool, array, object, string
 	 */
-	public $actions = array();
+	public $actions = array(
+		/*!
+		 * @cmd time
+		 * @method GET
+		 * @description This will call the do_time method and returns the current time in the specified format
+		 * @param {string} format The date format (default: "U")
+		 */
+		'time' => array('GET', 'time', array(
+			array('format', 'string', 'U', false)
+		))
+	);
 
 	/** @var string The variable name specifying the command variable (sometimes "cmd" or "do") */
 	private $cmdVar = 'do';
@@ -93,8 +160,27 @@ abstract class Server {
 	/** @var bool Also adds a trace to the error message (see $showerror) */
 	public $showtrace = true;
 
-	/** @var string How to convert error trace. (string | array)*/
-	public $tracetype = 'string';
+	/** @var string Random salt for validateToken and createToken */
+	public $salt='RANDOMKEYGOESHERE';
+
+	/**
+	 * @var string The name of the user name variable
+	 *      If you authenticate a user against your database, you might want to store
+	 *      the user's information in a session, using the setUserSession method.
+	 *      In order to validate if a user really is logged in, the obvious thing
+	 *      to check is for the user name itself.
+	 */
+	protected $usernameKey = 'username';
+
+	/**
+	 * Sample API task. Returns the current server time in the specified format
+	 *
+	 * @param  string $strFormat Date format
+	 * @return int|string
+	 */
+	public function do_time($strFormat='U') {
+		return gmdate($strFormat);
+	}
 
 	/**
 	 * Initialize a variable value.
@@ -244,7 +330,7 @@ abstract class Server {
 		if ( !$this->showerror )
 			return null;
 		elseif ( $this->showtrace )
-			return array('error' => $e->getMessage(), 'trace' => $this->errorTrace($e, $this->tracetype));
+			return array('error' => $e->getMessage(), 'trace' => errorTrace($e));
 		else
 			return array('error' => $e->getMessage());
 	}
@@ -337,6 +423,153 @@ abstract class Server {
 		return true;
 	}
 
+	/**
+	 * Validates a Cookie Token
+	 *
+	 * @param string $strUsername
+	 * @param int $intDay The number of days the cookie should be valid
+	 * @param string $strSalt Token salt
+	 */
+	public function createCookieToken($strUsername, $intDays=14, $strSalt=false) {
+		return cryptastic::encrypt(array(
+			'username' => $strUsername,
+			'expiration' => time() + 86400 * $intDays
+		), ($strSalt ? $strSalt : $this->salt));
+	}
+
+	/**
+	 * Validates a Cookie Token
+	 *
+	 * @param string $strCookieToken
+	 * @param string $strSalt Token salt
+	 * @return array|bool The username or FALSE
+	 */
+	public function validateCookieToken($strCookieToken, $strSalt=false) {
+		$t = cryptastic::decrypt($strCookieToken, ($strSalt ? $strSalt : $this->salt));
+
+		if (isset($t['username']) && isset($t['expiration']) && $t['expiration'] > time())
+			return $t['username'];
+
+		return false;
+	}
+
+	/**
+	 * Authenticates a user by using the session cookie
+	 *
+	 * @param unknown_type $strCookieToken
+	 * @return bool
+	 */
+	public function authCookieToken($strCookieToken) {
+		if ($username = self::validateCookieToken($strCookieToken)) {
+			self::setUserSession(array('username' => $user));
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Initializes and checks a server result
+	 *
+	 * @param array $res
+	 */
+	public function initResult($res) {
+		return self::openResult($res);
+	}
+
+	/**
+	 * Opens the response envelope
+	 *
+	 * @param array $res
+	 * @return string|array|number
+	 */
+	static public function openResult($res) {
+		if (!is_array($res))
+			throw new Exception('Invalid datatype. Array expected!');
+
+		if (isset($res['error']))
+			throw new Exception('Server error: '.$res['error']);
+
+		if (!isset($res['result']))
+			throw new Exception('Server returned no result.');
+
+		return $res['result'];
+	}
+
+	/**
+	 * Sets the user session information
+	 *
+	 * @param array $arrUser The user details, a derived from dbuser::select()
+	 * @return void
+	 */
+	public function setUserSession($arrUser) {
+		if (!isset($arrUser[$this->usernameKey]) || $arrUser[$this->usernameKey] == '')
+			throw new Exception('Invalid username');
+
+		foreach ($arrUser as $strKey => $strValue)
+			$_SESSION['user_'.$strKey] = $strValue;
+	}
+
+	/**
+	 * Returns the current user session
+	 *
+	 * @return array|bool
+	 */
+	public function getUserSession() {
+		if (isset($_SESSION['user_'.$this->usernameKey])) {
+			$arrUser = array();
+			foreach ($_SESSION as $strKey => $strValue)
+				if (substr($strKey, 0, 4) == 'user_')
+					$arrUser[substr($strKey, 4)] = $strValue;
+			return $arrUser;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Unsets the current user session
+	 *
+	 * @return array|bool
+	 */
+	public function unsetUserSession() {
+		foreach ($_SESSION as $strKey => $strValue)
+			if (substr($strKey, 0, 4) == 'user_')
+				unset($_SESSION[$strKey]);
+	}
+
+	/**
+	 * Validates a token
+	 *
+	 * @param string $strToken The client token
+	 * @param string $strSalt Token salt
+	 * @return bool
+	 */
+	public function validateToken($strToken, $strSalt=false) {
+		return self::createToken($strSalt) == $strToken;
+	}
+
+	/**
+	 * Creates a simple token
+	 *
+	 * @param string $strSalt Token salt
+	 * @return string
+	 */
+	public function createToken($strSalt=false) {
+		return md5(date('dmY').' '.($strSalt ? $strSalt : $this->salt));
+	}
+
+	/**
+	 * Authenticates an API call by token
+	 *
+	 * @return bool
+	 */
+	public function authToken() {
+		if (isset($_REQUEST['token']))
+			return self::validateToken($_REQUEST['token']);
+
+		return false;
+	}
 }
 
 ?>
