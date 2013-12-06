@@ -31,7 +31,7 @@ function errorTrace($e) {
 			if (isset($v['args']) && isset($v['function'])) {
 				$parts = array();
 				foreach($v['args'] as $arg)
-					$parts[] = KickstartErrorArg($arg);
+					$parts[] = errorArg($arg);
 				$strTrace .= implode(',', $parts).') ';
 			}
 			if (isset($v['file']) && isset($v['line']))
@@ -61,7 +61,7 @@ function errorArg($arg, $depth=true) {
 		$parts = array();
 		if ($depth)
 			foreach ($arg as $k => $v)
-				$parts[] = $k.' => '.KickstartErrorArg($v, false);
+				$parts[] = $k.' => '.errorArg($v, false);
 		return 'array('.implode(', ', $parts).')';
 	} elseif ($depth)
 		return var_export($arg, true);
