@@ -255,11 +255,16 @@ abstract class RESTserver {
 	 */
 	protected function exceptionToResult(Exception $e) {
 		if ( !$this->showerror )
-			return null;
+			$data = null;
 		elseif ( $this->showtrace )
-			return array('error' => $e->getMessage(), 'trace' => $this->errorTrace($e, $this->tracetype));
+			$data = array('error' => $e->getMessage(), 'trace' => $this->errorTrace($e, $this->tracetype));
 		else
-			return array('error' => $e->getMessage());
+			$data = array('error' => $e->getMessage());
+
+		if ( $data != null && class_exists('ErrorCodeException') && $e instanceof ErrorCodeException )
+			$data['code'] = $e->getCustomCode();
+
+		return $data;
 	}
 
 	/**
