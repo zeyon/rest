@@ -286,6 +286,15 @@ abstract class Server {
 	/** @var string Random salt for validateToken and createToken */
 	public $salt='RANDOMKEYGOESHERE';
 
+
+	/**
+	 * @param string $strSalt The token salt
+	 */
+	public function __construct($strSalt=false) {
+		if ($strSalt)
+			$this->salt = $strSalt;
+	}
+
 	/**
 	 * @var string The name of the user name variable
 	 *      If you authenticate a user against your database, you might want to store

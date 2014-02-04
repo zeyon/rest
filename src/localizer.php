@@ -32,10 +32,14 @@ class Localizer {
 	 * @param array $arrAccepted All accepted languages
 	 * @param string $strDefault Default language code
 	 */
-	public function __construct($arrAccepted=array(), $strDefault='de') {
+	public function __construct($arrAccepted=array(), $strDefault='de', $strFileFormat=false) {
 		if ($arrAccepted)
 			$this->arrAccepted = $arrAccepted;
+
 		$this->strDefault = $strDefault;
+
+		if ($strFileFormat)
+			$this->strFileFormat = $strFileFormat;
 	}
 
 	/**
@@ -89,12 +93,12 @@ class Localizer {
 
 		$strFilename = $strSourcePath.$strLang.'.'.$this->strFileFormat;
 		if (!file_exists($strFilename))
-			throw new Exception('Locale file not found: '.$strFilename);
+			throw new \Exception('Locale file not found: '.$strFilename);
 
 		switch ($this->strFileFormat) {
 			case 'yml':
 				if (!class_exists('\\Spyc'))
-					throw new Exception('Spyc YAML parser not loaded!');
+					throw new \Exception('Spyc YAML parser not loaded!');
 				$LANGVAR = \Spyc::YAMLLoad($strFilename);
 				break;
 
@@ -316,7 +320,7 @@ class Localizer {
 				}
 			}
 			return array('lang' => $current_lang, 'other' => $other);;
-		} catch (Exception $e) {
+		} catch (\Exception $e) {
 			return $res;
 		}
 	}
