@@ -324,9 +324,6 @@ abstract class RESTserver {
 		$trace = '#0: '.$e->getMessage().'; File: '.$e->getFile().'; Line: '.$e->getLine()."\n";
 		$i = 1;
 
-		function addString(&$t, $a) { $t .= $a; }
-		function addArray(&$t, $a) { $t[] = $a; }
-
 		$method = 'addString';
 		if ( $tracetype === 'array' ) {
 			$method = 'addArray';
@@ -356,12 +353,15 @@ abstract class RESTserver {
 
 				$i++;
 
-				$method($trace, $strTrace);
+				$this->$method($trace, $strTrace);
 			}
 		}
 
 		return $trace;
 	}
+
+	private function addString(&$t, $a) { $t .= $a; }
+	private function addArray(&$t, $a) { $t[] = $a; }
 
 	/**
 	 * Converts any function arguement into a string
