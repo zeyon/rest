@@ -72,6 +72,34 @@ abstract class RESTserver {
 	);
 
 	/**
+	 * String values that indicate a value of TRUE.
+	 *
+	 * @var array
+	 * @see iniGetBool()
+	 */
+	static protected $stringTrueValues = array(
+		'1'    => true,
+		'true' => true,
+	);
+
+	/**
+	 * Try convert string to boolean true or false.
+	 *
+	 * @param mixed $rawValue
+	 * @return bool
+	 */
+	static public function mixedToBool($rawValue) {
+		if ( is_bool($rawValue) )
+			return $rawValue;
+
+		$value = strtolower((string)$rawValue);
+		if ( isset(self::$stringTrueValues[$value]) )
+			return true;
+
+		return false;
+	}
+
+	/**
 	 * @var array An associative array mapping actions to their definitions.
 	 *     Action format:    { <name> => [ <method>, <function>, <parameters> ] }
 	 *       Methods:        POST, GET, REQUEST
@@ -149,7 +177,7 @@ abstract class RESTserver {
 				return is_array($value) ? $value : array();
 
 			case 'bool':
-				return (bool)$value;
+				return self::mixedToBool($value);
 
 			case 'object':
 				return is_object($value) ? $value : null;
