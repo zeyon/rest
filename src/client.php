@@ -226,7 +226,7 @@ class Client {
 		elseif ( isset($res['error']) )
 			throw new Exception('Server error: '.$res['error']);
 		elseif ( !isset($res['result']) )
-			throw new Exception('Server returned no result: '.$ser);
+			throw new Exception('Server returned no result: '.$res);
 
 		return $res['result'];
 	}
