@@ -323,9 +323,11 @@ class Validator {
 		if (isset($arrOptions['message']))
 			return $this->locale->insert($arrOptions['message'], array('value' => isset($arrOptions['value']) ? $arrOptions['value'] : $arrOptions['field'], 'field' => $arrOptions['field']));
 
+		$field = isset($arrOptions['field']) ? $this->locale->get($arrOptions['field']) : '';
+
 		switch ($intCode) {
 			case FILTER_VALIDATE_REQUIRED:
-				return $this->locale->insert('error.empty', array('value' => $arrOptions['field']));
+				return $this->locale->insert('error.empty', array('value' => $field));
 			case FILTER_VALIDATE_PASSWORD:
 				return $this->locale->get('error.password');
 			case FILTER_VALIDATE_USERNAME:
@@ -345,30 +347,30 @@ class Validator {
 			case FILTER_VALIDATE_URL:
 				return $this->locale->insert('error.not_a_url', array('value' => $arrOptions['value']));
 			case FILTER_VALIDATE_FLOAT:
-				return $this->locale->insert('error.not_a_number', array('value' => $arrOptions['field']));
+				return $this->locale->insert('error.not_a_number', array('value' => $field));
 			case FILTER_VALIDATE_INT:
 				if (isset($arrOptions['min_range']) && isset($arrOptions['max_range']))
-					return $this->locale->insert('error.in_between', array('value' => $arrOptions['field'], 'min' => $arrOptions['min_range'], 'max' => $arrOptions['max_range']));
+					return $this->locale->insert('error.in_between', array('value' => $field, 'min' => $arrOptions['min_range'], 'max' => $arrOptions['max_range']));
 				elseif (isset($arrOptions['min_range']))
-					return $this->locale->insert('error.greater_than', array('value' => $arrOptions['field'], 'count' => $arrOptions['min_range']));
+					return $this->locale->insert('error.greater_than', array('value' => $field, 'count' => $arrOptions['min_range']));
 				elseif (isset($arrOptions['max_range']))
-					return $this->locale->insert('error.less_than', array('value' => $arrOptions['field'], 'count' => $arrOptions['max_range']));
+					return $this->locale->insert('error.less_than', array('value' => $field, 'count' => $arrOptions['max_range']));
 				else
-					return $this->locale->insert('error.not_a_int', array('value' => $arrOptions['field']));
+					return $this->locale->insert('error.not_a_int', array('value' => $field));
 			case FILTER_VALIDATE_BOOLEAN:
 				break;
 			case FILTER_VALIDATE_MIN_LENGTH:
-				return $this->locale->insert('error.too_short', array('value' => $arrOptions['field'], 'count' => $arrOptions['len']));
+				return $this->locale->insert('error.too_short', array('value' => $field, 'count' => $arrOptions['len']));
 			case FILTER_VALIDATE_MAX_LENGTH:
-				return $this->locale->insert('error.too_long', array('value' => $arrOptions['field'], 'count' => $arrOptions['len']));
+				return $this->locale->insert('error.too_long', array('value' => $field, 'count' => $arrOptions['len']));
 			case FILTER_VALIDATE_LENGTH:
-				return $this->locale->insert('error.wrong_range', array('value' => $arrOptions['field'], 'min' => $arrOptions['min'], 'max' => $arrOptions['max']));
+				return $this->locale->insert('error.wrong_range', array('value' => $field, 'min' => $arrOptions['min'], 'max' => $arrOptions['max']));
 			case FILTER_VALIDATE_DATE_RANGE:
 				$arrOptions['format'] = isset($arrOptions['format']) ? $arrOptions['format'] : $this->locale->getDateFormat('date.format.default');
-				return $this->locale->insert('error.date_range', array('value' => $arrOptions['field'], 'min' => date($arrOptions['format'], $arrOptions['min']), 'max' => date($arrOptions['format'], $arrOptions['max'])));
+				return $this->locale->insert('error.date_range', array('value' => $field, 'min' => date($arrOptions['format'], $arrOptions['min']), 'max' => date($arrOptions['format'], $arrOptions['max'])));
 			case FILTER_VALIDATE_DATE_START_END:
 				$arrOptions['format'] = isset($arrOptions['format']) ? $arrOptions['format'] : $this->locale->getDateFormat('date.format.default');
-				return $this->locale->insert('error.date_start_end', array('value' => $arrOptions['field'], 'end' => date($arrOptions['format'], $arrOptions['end'])));
+				return $this->locale->insert('error.date_start_end', array('value' => $field, 'end' => date($arrOptions['format'], $arrOptions['end'])));
 			default:
 				// too_long
 				// too_short
@@ -379,6 +381,6 @@ class Validator {
 				break;
 		}
 
-		return $this->locale->insert('error.invalid', array('value' => isset($arrOptions['value']) ? $arrOptions['value'] : $arrOptions['field'], 'field' => $arrOptions['field']));
+		return $this->locale->insert('error.invalid', array('value' => isset($arrOptions['value']) ? $arrOptions['value'] : $field, 'field' => $field));
 	}
 }
