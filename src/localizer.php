@@ -23,6 +23,8 @@ class Localizer {
 	public $strCurrent = '';
 	/** @var string The default file format (json, ini or yml) */
 	public $strFileFormat = 'json';
+	/** @var string Regular expression used for variable replacement */
+	public $regex = '/{{([A-Za-z0-9.]+)}}/';
 
 	// ============== Object's core functions ==============
 
@@ -233,7 +235,7 @@ class Localizer {
 	 * @return $strTemplate
 	 */
 	public function replace($strTemplate) {
-		preg_match_all('/{{([A-Za-z0-9.]+)}}/', $strTemplate, $matches);
+		preg_match_all($this->regex, $strTemplate, $matches);
 		$arrReplace = array();
 		foreach ($matches[1] as $match) {
 			$arrReplace[] = $this->get($match);
