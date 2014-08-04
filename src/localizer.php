@@ -252,7 +252,7 @@ class Localizer {
 	 * @param bool $bolStore Switch to store language in the current session
 	 */
 	public function init($arrAccepted, $strDefault, $bolStore=true) {
-		$strLang = isset($_REQUEST['lang']) ? $_REQUEST['lang']
+		$strLang = isset($_GET['lang']) ? $_GET['lang']
 				: (isset($_SESSION['lang']) ? $_SESSION['lang']
 				: (isset($_COOKIE['lang']) ? $_COOKIE['lang'] : false));
 		if (!$strLang || !in_array($strLang, $arrAccepted)) {
