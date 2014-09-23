@@ -180,15 +180,25 @@ class Localizer {
 			if (isset($data[$p]))
 				$data = $data[$p];
 			else
-				return $bolReturnPath ? '%'.strtoupper($strKey) : false;
+				return $bolReturnPath ? $this->returnKey($strKey) : false;
 		}
 
 		// if key was not resolved completely
 		if ( is_array($data) )
-			return $bolReturnPath ? '%'.strtoupper($strKey) : false;
+			return $bolReturnPath ? $this->returnKey($strKey) : false;
 
 
 		return (string) $data;
+	}
+
+	/**
+	 * Returns the placeholder
+	 *
+	 * @param $strKey
+	 * @return string
+	 */
+	public function returnKey($strKey) {
+		return  '%'.strtoupper($strKey);
 	}
 
 	/**
@@ -215,7 +225,7 @@ class Localizer {
 			if (isset($data[$p]))
 				$data = $data[$p];
 			else
-				return '%'.strtoupper($strKey).'('.json_encode($arrReplace).')';
+				return $this->returnKey($strKey).'('.json_encode($arrReplace).')';
 		}
 
 		$arrSearch = array();
