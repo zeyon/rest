@@ -1,0 +1,30 @@
+{
+  "name": "zeyon/rest",
+  "description": "A simple utility library to send and receive HTTP requests.",
+  "license": "LGPL",
+  "require": {
+    "php": ">=5.4.0"
+  },
+  "authors": [
+    {
+      "name": "Zeyon Technologies Inc.",
+      "email": "code@zeyon.net",
+      "homepage": "https://www.zeyos.com"
+    },
+	{
+      "name": "Peter Haider",
+      "email": "peter.haider@zeyon.net",
+      "homepage": "https://www.about.me/peterhaider"
+    },
+	{
+      "name": "Huy-Hoang Nguyen",
+      "email": "hoang.nguyen@zeyon.net",
+      "homepage": "https://github.com/zeymon"
+    },
+	{
+      "name": "Sebastian Glonner",
+      "email": "sebastian.glonner@zeyon.net",
+      "homepage": "https://github.com/SebastianGlonner"
+    }
+  ]
+}
