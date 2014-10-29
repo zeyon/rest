@@ -52,6 +52,7 @@ class RESTclient {
 	private $method = 'GET';
 
 	public $protocol_version = false; // Use the default protocol version
+	public $additionHttpContextParams = false;
 
 	public function __construct($url = null, $user = null, $password = null) {
 		$this->setURL($url);
@@ -59,6 +60,10 @@ class RESTclient {
 	}
 
 	/* --------------- Setting functions --------------- */
+
+	public function setAdditionalHttpContextParams(array $params) {
+		$this->additionHttpContextParams = $params;
+	}
 
 	public function setURL($url) {
 		$this->url = $url;
@@ -137,50 +142,55 @@ class RESTclient {
 		else
 			$auth = base64_encode($user.':'.$password);
 
-		$this->appendHeader('Content-Type: '.$contenttype);
+		if ( $contenttype ) {
+			// Only set content type if is given
+			$this->appendHeader('Content-Type: '.$contenttype);
+		}
 
 		// Perform the request
 
 		if ( empty($this->methods[$method]) )
 			throw new Exception('Invalid HTTP method: '.$method);
 
-		if ( $method == 'GET' ) {
-			// Get requests do not require a stream
-			$contents = file_get_contents(
-				$url['scheme'].'://'.($auth == '' ? '' : $auth.'@').$url['host'].( isset($url['port']) ? ':'.$url['port'] : '' )
-				.$url['path']
-				.(isset($query) ? '?'.$query : '')
-				.(isset($url['fragment']) ? '#'.$url['fragment'] : '')
-			);
+		// In all other cases perform the Request using a stream
+		if ( $auth )
+			$this->appendHeader('Authorization: Basic '.$auth);
 
-		} else {
-			// In all other cases perform the Request using a stream
-			if ( $auth )
-				$this->appendHeader('Authorization: Basic '.$auth);
+		// Add this to your script if you ever encounter an
+		// "417 - Expectation Failed" error message.
+		//$this->appendHeader('Expect:');
 
-			$this->appendHeader('Content-Length: '.strlen($query));
+		$ctxHttpParams = [
+			'method'  => $method
+		];
 
-			// Add this to your script if you ever encounter an
-			// "417 - Expectation Failed" error message.
-			//$this->appendHeader('Expect:');
+		if ( $this->protocol_version )
+			$ctxHttpParams['protocol_version'] =$this->protocol_version;
 
-			$ctx = stream_context_create(array(
-				'http' => array(
-					'method'  => $method,
-					'header'  => $this->getHeader(),
-					'content' => $query
-				) + ( $this->protocol_version ? array('protocol_version' => $this->protocol_version) : array() )
-			));
+		if ( $this->additionHttpContextParams )
+			$ctxHttpParams = array_merge($ctxHttpParams, $this->additionHttpContextParams);
 
-			$contents = file_get_contents(
-				$url['scheme'].'://'.$url['host'].( isset($url['port']) ? ':'.$url['port'] : '' )
-					.(isset($url['path']) ? $url['path'] : '')
-					.(isset($url['fragment']) ? '#'.$url['fragment'] : ''),
-				false,
-				$ctx
-			);
+		$strUrl = $url['scheme'].'://'.$url['host'].( isset($url['port']) ? ':'.$url['port'] : '' );
+		if ( isset($url['path']) )
+			$strUrl .= $url['path'];
 
+		if ( !empty($query) ) {
+			if ( $method === 'GET' ) {
+				$strUrl .= '?'.$query;
+				$this->appendHeader('Content-Length: 0');
+			} else {
+				$ctxHttpParams['content'] = $query;
+				$this->appendHeader('Content-Length: '.strlen($query));
+			}
 		}
+
+		$ctxHttpParams['header'] = $this->getHeader();
+
+		if ( isset($url['fragment']) )
+			$strUrl .= '#'.$url['fragment'];
+
+		$ctx = stream_context_create(['http' => $ctxHttpParams]);
+		$contents = file_get_contents($strUrl, false, $ctx);
 
 		$this->responseHeaders = $http_response_header;
 		return $contents;
