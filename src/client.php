@@ -130,7 +130,7 @@ class RESTclient {
 		$url = parse_url( $url === null ? $this->url : $url );
 
 		$query = isset($url['query']) ? $url['query'] : null;
-		if ( is_array($params) )
+		if ( is_array($params) && !empty($params) )
 			$query = ( $query === null ? '' : '&').http_build_query($params, null, '&');
 
 		$method = strtoupper( $method === null ? $this->method : $method );
