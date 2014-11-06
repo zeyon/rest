@@ -174,15 +174,17 @@ class RESTclient {
 		if ( isset($url['path']) )
 			$strUrl .= $url['path'];
 
+		$contentLength = 0;
 		if ( !empty($query) ) {
 			if ( $method === 'GET' ) {
 				$strUrl .= '?'.$query;
-				$this->appendHeader('Content-Length: 0');
 			} else {
 				$ctxHttpParams['content'] = $query;
-				$this->appendHeader('Content-Length: '.strlen($query));
+				$contentLength = strlen($query);
 			}
 		}
+
+		$this->appendHeader('Content-Length: '.$contentLength);
 
 		$ctxHttpParams['header'] = $this->getHeader();
 
