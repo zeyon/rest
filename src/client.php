@@ -1,6 +1,11 @@
 <?php
 namespace REST;
 
+// Define Exception Class
+if (!class_exists('\REST\Exception')) {
+	class Exception extends \Exception { }
+}
+
 /**
  * A simple REST client to perform REST request
  *

@@ -10,6 +10,12 @@ if ( !defined('UPLOAD_ERR_CANT_WRITE') ) // Introduced in PHP 5.1.0
 if ( !defined('UPLOAD_ERR_EXTENSION') ) // Introduced in PHP 5.2.0
 	define('UPLOAD_ERR_EXTENSION', 8);
 
+	
+// Define Exception Class
+if (!class_exists('\REST\Exception')) {
+	class Exception extends \Exception { }
+}
+	
 /**
  * Returns an error trace
  *
