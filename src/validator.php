@@ -97,6 +97,33 @@ class Validator {
 		FILTER_VALIDATE_INTZERO        => array('\\REST\\Validator', 'filter_int_zero'),
 	);
 
+	private $filterKeys = array(
+		'PASSWORD'       => FILTER_VALIDATE_PASSWORD,
+		'USERNAME'       => FILTER_VALIDATE_USERNAME,
+		'USERNAME_CHARS' => FILTER_VALIDATE_USERNAME_CHARS,
+		'IPV4'           => FILTER_VALIDATE_IPV4,
+		'IPV6'           => FILTER_VALIDATE_IPV6,
+		'URLPATH'        => FILTER_VALIDATE_URLPATH,
+		'URLQUERY'       => FILTER_VALIDATE_URLQUERY,
+		'MIN_LENGTH'     => FILTER_VALIDATE_MIN_LENGTH,
+		'MAX_LENGTH'     => FILTER_VALIDATE_MAX_LENGTH,
+		'LENGTH'         => FILTER_VALIDATE_LENGTH,
+		'DATE_RANGE'     => FILTER_VALIDATE_DATE_RANGE,
+		'DATE_START_END' => FILTER_VALIDATE_DATE_START_END,
+		'RESOURCE'       => FILTER_VALIDATE_RESOURCE,
+		'INTZERO'        => FILTER_VALIDATE_INTZERO,
+		'BOOLEAN'        => FILTER_VALIDATE_BOOLEAN,
+		'INT'            => FILTER_VALIDATE_INT,
+		'FLOAT'          => FILTER_VALIDATE_FLOAT,
+		'IDENTIFIER'     => FILTER_VALIDATE_IDENTIFIER,
+		'LANGCODE'       => FILTER_VALIDATE_LANGCODE,
+		'REQUIRED'       => FILTER_VALIDATE_REQUIRED,
+		'IP'             => FILTER_VALIDATE_IP,
+		'URL'            => FILTER_VALIDATE_URL,
+		'EMAIL'          => FILTER_VALIDATE_EMAIL,
+		'REGEXP'         => FILTER_VALIDATE_REGEXP,
+	);
+
 	private $typesToFilter = array(
 		'integer' => array(
 			'filter' => FILTER_VALIDATE_INT
@@ -163,7 +190,7 @@ class Validator {
 	 */
 	public function fieldTypesToFilter($arrFields) {
 		foreach ($arrFields as $key => &$properties) {
-			if ( isset($properties['filter']) ||
+			if (isset($properties['filter']) ||
 				!isset($properties['type']) ||
 				!isset($this->typesToFilter[$properties['type']]) )
 				continue;
@@ -190,6 +217,12 @@ class Validator {
 				if (!isset($arrData[$key]))
 					unset($arrFilters[$key]);
 			}
+		}
+
+		// Resolve the filter keys in case the caller didn't use costants
+		foreach ($arrFilters as $key => $filter) {
+			if (isset($filter['filter']) && isset($this->filterKeys[strtoupper($filter['filter'])]))
+				$arrFilters[$key]['filter'] = $this->filterKeys[strtoupper($filter['filter'])];
 		}
 		return $this->filterArray($arrData, $arrFilters);
 	}
@@ -223,7 +256,7 @@ class Validator {
 				unset($arrFilters[$key]);
 				continue;
 
-			} elseif ( is_string($F['filter']) ) {
+			} elseif (is_string($F['filter'])) {
 				try {
 					$intF = @constant($F['filter']);
 				} catch (Exception $e) {
@@ -235,8 +268,8 @@ class Validator {
 					continue;
 
 				}
-			} elseif ( isset($F['required']) ) {
-				if ( !$F['required'] && (string)$arrData[$key] == '' ) {
+			} elseif (isset($F['required'])) {
+				if (!$F['required'] && (string)$arrData[$key] == '') {
 					unset($arrFilters[$key]);
 					continue;
 				}
@@ -323,7 +356,7 @@ class Validator {
 		if (isset($arrOptions['message']))
 			return $this->locale->insert($arrOptions['message'], array('value' => isset($arrOptions['value']) ? $arrOptions['value'] : $arrOptions['field'], 'field' => $arrOptions['field']));
 
-		$field = isset($arrOptions['field']) ? $this->locale->get($arrOptions['field']) : '';
+		$field = isset($arrOptions['label']) ? $arrOptions['label'] : (isset($arrOptions['field']) ? $this->locale->get($arrOptions['field']) : '');
 
 		switch ($intCode) {
 			case FILTER_VALIDATE_REQUIRED:

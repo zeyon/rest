@@ -18,7 +18,36 @@ The `Server` class allows you to receive and process incoming HTTP requests.
 
 ### Validator ###
 
-Utility class for form validation.
+Utility class for form validation. Uses [filter_var_array](http://php.net/manual/en/function.filter-var-array.php) to filter
+form values.
+
+Available filters (see also [filter.constants](http://php.net/manual/en/filter.constants.php))
+```
+'PASSWORD'       => FILTER_VALIDATE_PASSWORD,
+'USERNAME'       => FILTER_VALIDATE_USERNAME,
+'USERNAME_CHARS' => FILTER_VALIDATE_USERNAME_CHARS,
+'IPV4'           => FILTER_VALIDATE_IPV4,
+'IPV6'           => FILTER_VALIDATE_IPV6,
+'URLPATH'        => FILTER_VALIDATE_URLPATH,
+'URLQUERY'       => FILTER_VALIDATE_URLQUERY,
+'MIN_LENGTH'     => FILTER_VALIDATE_MIN_LENGTH,
+'MAX_LENGTH'     => FILTER_VALIDATE_MAX_LENGTH,
+'LENGTH'         => FILTER_VALIDATE_LENGTH,
+'DATE_RANGE'     => FILTER_VALIDATE_DATE_RANGE,
+'DATE_START_END' => FILTER_VALIDATE_DATE_START_END,
+'RESOURCE'       => FILTER_VALIDATE_RESOURCE,
+'INTZERO'        => FILTER_VALIDATE_INTZERO,
+'BOOLEAN'        => FILTER_VALIDATE_BOOLEAN,
+'INT'            => FILTER_VALIDATE_INT,
+'FLOAT'          => FILTER_VALIDATE_FLOAT,
+'IDENTIFIER'     => FILTER_VALIDATE_IDENTIFIER,
+'LANGCODE'       => FILTER_VALIDATE_LANGCODE,
+'REQUIRED'       => FILTER_VALIDATE_REQUIRED,
+'IP'             => FILTER_VALIDATE_IP,
+'URL'            => FILTER_VALIDATE_URL,
+'EMAIL'          => FILTER_VALIDATE_EMAIL,
+'REGEXP'         => FILTER_VALIDATE_REGEXP,
+```
 
 
 ### Localizer ###
