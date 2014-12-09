@@ -26,5 +26,10 @@
       "email": "sebastian.glonner@zeyon.net",
       "homepage": "https://github.com/SebastianGlonner"
     }
-  ]
+  ],
+  "autoload": {
+    "psr-4": {
+      "REST\\": "src/"
+    }
+  }
 }
