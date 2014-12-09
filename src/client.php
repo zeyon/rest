@@ -229,7 +229,7 @@ class Client {
 	/**
 	 * Convenience method wrapping a commom delete call
 	 */
-	public function delete($params = null, $url = null, $contenttype = null, $user = null, $password = null) {
+	public function delete($params = null, $url = null, $contenttype = 'application/x-www-form-urlencoded', $user = null, $password = null) {
 		return $this->request($params, $url, 'DELETE', $contenttype, $user, $password);
 	}
 
