@@ -182,7 +182,11 @@ class Client {
 			$strUrl .= $url['path'];
 
 		$contentLength = 0;
-		if ( !empty($query) ) {
+		if ( strpos($contenttype, 'application/json') === 0 ) {
+			$ctxHttpParams['content'] = $params;
+			$contentLength = strlen($params);
+
+		} else if ( !empty($query) ) {
 			if ( $method === 'GET' ) {
 				$strUrl .= '?'.$query;
 			} else {
