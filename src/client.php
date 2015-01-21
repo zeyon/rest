@@ -136,8 +136,6 @@ class Client {
 		$url = parse_url( $url === null ? $this->url : $url );
 
 		$query = isset($url['query']) ? $url['query'] : null;
-		if ( is_array($params) && !empty($params) )
-			$query = ( $query === null ? '' : '&').http_build_query($params, null, '&');
 
 		$method = strtoupper( $method === null ? $this->method : $method );
 		$user = isset($url['username']) ? $url['username'] : ( $user === null ? $this->user : $user );
@@ -182,18 +180,29 @@ class Client {
 			$strUrl .= $url['path'];
 
 		$contentLength = 0;
-		if ( strpos($contenttype, 'application/json') === 0 ) {
-			$ctxHttpParams['content'] = $params;
-			$contentLength = strlen($params);
-
-		} else if ( !empty($query) ) {
+		if ( !empty($params) ) {
 			if ( $method === 'GET' ) {
-				$strUrl .= '?'.$query;
+				if ( is_array($params) )
+					$query = ( $query === null ? '' : '&').http_build_query($params, null, '&');
+				else
+					$query = ( $query === null ? '' : '&').$params;
+
+			} else if ( strpos($contenttype, 'application/json') === 0 ) {
+				$ctxHttpParams['content'] = (
+					is_string($params) ?
+					$params :
+					json_encode($params)
+				);
+				$contentLength = strlen($ctxHttpParams['content']);
+
 			} else {
-				$ctxHttpParams['content'] = $query;
-				$contentLength = strlen($query);
+				$ctxHttpParams['content'] =	http_build_query($params, null, '&');
+				$contentLength = strlen($ctxHttpParams['content']);
 			}
 		}
+
+		if ( $query )
+			$strUrl .= '?'.$query;
 
 		$this->appendHeader('Content-Length: '.$contentLength);
 
