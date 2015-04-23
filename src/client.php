@@ -214,7 +214,12 @@ class Client {
 		$ctx = stream_context_create(['http' => $ctxHttpParams]);
 		$contents = file_get_contents($strUrl, false, $ctx);
 
-		$this->responseHeaders = $http_response_header;
+		$this->responseHeaders = (
+			isset($http_response_header)
+			? $http_response_header
+			: array()
+		);
+
 		return $contents;
 	}
 
