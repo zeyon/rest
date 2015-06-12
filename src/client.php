@@ -167,7 +167,8 @@ class RESTclient {
 		//$this->appendHeader('Expect:');
 
 		$ctxHttpParams = [
-			'method'  => $method
+			'method'  => $method,
+			'ignore_errors' => true
 		];
 
 		if ( $this->protocol_version )
