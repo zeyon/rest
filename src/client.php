@@ -42,6 +42,8 @@ class Client {
 	 */
 	private $responseHeaders = array();
 
+	private $doValidateSSLCert = true;
+
 	/**
 	 * @var array
 	 */
@@ -125,6 +127,10 @@ class Client {
 	 */
 	public function getResponseHeaders() {
 		return $this->responseHeaders;
+	}
+
+	public function disableSSLCertValidation() {
+		$this->doValidateSSLCert = false;
 	}
 
 	/* --------------- Request functions --------------- */
@@ -211,7 +217,15 @@ class Client {
 		if ( isset($url['fragment']) )
 			$strUrl .= '#'.$url['fragment'];
 
-		$ctx = stream_context_create(['http' => $ctxHttpParams]);
+		$arrContentOptions = ['http' => $ctxHttpParams];
+		if ( $this->doValidateSSLCert === false ) {
+			$arrContentOptions['ssl'] = [
+				'verify_peer' => false,
+				'verify_peer_name' => false,
+			];
+		}
+
+		$ctx = stream_context_create($arrContentOptions);
 		$contents = file_get_contents($strUrl, false, $ctx);
 
 		$this->responseHeaders = (
