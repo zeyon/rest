@@ -637,14 +637,14 @@ abstract class Server {
 	/**
 	 * Sets the user session information
 	 *
-	 * @param array $arrUser The user details, a derived from dbuser::select()
+	 * @param $user The user details, derived from dbuser::select()
 	 * @return void
 	 */
-	public function setUserSession($arrUser) {
-		if (!isset($arrUser[$this->usernameKey]) || $arrUser[$this->usernameKey] == '')
+	public function setUserSession($user) {
+		if (!isset($user[$this->usernameKey]) || $user[$this->usernameKey] == '')
 			throw new Exception('Invalid username');
 
-		foreach ($arrUser as $strKey => $strValue)
+		foreach ($user as $strKey => $strValue)
 			$_SESSION['user_'.$strKey] = $strValue;
 	}
 
