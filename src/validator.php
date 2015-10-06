@@ -259,7 +259,7 @@ class Validator {
 			} elseif (is_string($F['filter'])) {
 				try {
 					$intF = @constant($F['filter']);
-				} catch (Exception $e) {
+				} catch (\Exception $e) {
 					continue;
 				}
 				if ( $intF )

@@ -464,7 +464,7 @@ abstract class Server {
 	 *     is set. Can be overridden to return other data.
 	 * @see handleException()
 	 */
-	protected function exceptionToResult(Exception $e) {
+	protected function exceptionToResult(\Exception $e) {
 		if ( !$this->showerror )
 			return null;
 		elseif ( $this->showtrace )
@@ -485,7 +485,7 @@ abstract class Server {
 	 * @return mixed Returns data obtained from {@link exceptionToResult()}.
 	 * @see exceptionToResult()
 	 */
-	protected function handleException($command = null, array $source = null, Exception $e) {
+	protected function handleException($command = null, array $source = null, \Exception $e) {
 		$standaloneCall = ( ($command === null) and ($source === null) );
 
 		if ( class_exists('HTTP') and
@@ -521,7 +521,7 @@ abstract class Server {
 	public function dispatch($command = null, array $source = null) {
 		try {
 			return $this->rawDispatch($command, $source);
-		} catch (Exception $e) {
+		} catch (\Exception $e) {
 			return $this->handleException($command, $source, $e);
 		}
 	}
