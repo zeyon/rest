@@ -135,7 +135,7 @@ class Client {
 
 	/* --------------- Request functions --------------- */
 
-	public function request($params = null, $url = null, $method = null, $contenttype = 'text/plain', $user = null, $password = null) {
+	public function request($params = null, $url = null, $method = null, $contenttype = 'text/plain', $user = null, $password = null, $raw = false) {
 		$this->responseHeaders = array();
 
 		// Initialize parameters
@@ -186,25 +186,31 @@ class Client {
 			$strUrl .= $url['path'];
 
 		$contentLength = 0;
-		if ( !empty($params) ) {
-			if ( $method === 'GET' ) {
-				if ( is_array($params) )
-					$query = ( $query === null ? '' : '&').http_build_query($params, null, '&');
-				else
-					$query = ( $query === null ? '' : '&').$params;
+		if ( empty($params) ) {
+		} elseif ( $method === 'GET' ) {
+			if ( is_array($params) )
+				$query = ( $query === null ? '' : '&' ).http_build_query($params, null, '&');
+			else
+				$query = ( $query === null ? '' : '&' ).$params;
 
-			} else if ( strpos($contenttype, 'application/json') === 0 ) {
-				$ctxHttpParams['content'] = (
-					is_string($params) ?
-					$params :
-					json_encode($params)
-				);
-				$contentLength = strlen($ctxHttpParams['content']);
+		} elseif ( strpos($contenttype, 'application/json') === 0 ) {
+			$ctxHttpParams['content'] = (
+				is_string($params)
+				? $params
+				: json_encode($params)
+			);
+			$contentLength = strlen($ctxHttpParams['content']);
 
-			} else {
-				$ctxHttpParams['content'] =	http_build_query($params, null, '&');
-				$contentLength = strlen($ctxHttpParams['content']);
-			}
+		} elseif ( ($params !== null) and is_scalar($params) ) {
+			if ( !$raw )
+				throw new Exception('Encountered raw parameter data but raw flag was not set.');
+
+			$ctxHttpParams['content'] =	$params;
+			$contentLength = strlen($params);
+
+		} else {
+			$ctxHttpParams['content'] =	http_build_query($params, null, '&');
+			$contentLength = strlen($ctxHttpParams['content']);
 		}
 
 		if ( $query )
@@ -220,7 +226,7 @@ class Client {
 		$arrContentOptions = ['http' => $ctxHttpParams];
 		if ( $this->doValidateSSLCert === false ) {
 			$arrContentOptions['ssl'] = [
-				'verify_peer' => false,
+				'verify_peer'      => false,
 				'verify_peer_name' => false,
 			];
 		}
@@ -240,29 +246,29 @@ class Client {
 	/**
 	 * Convenience method wrapping a commom POST call
 	 */
-	public function post($params = null, $url = null, $contenttype = 'application/x-www-form-urlencoded', $user = null, $password = null) {
-		return $this->request($params, $url, 'POST', $contenttype, $user, $password);
+	public function post($params = null, $url = null, $contenttype = 'application/x-www-form-urlencoded', $user = null, $password = null, $raw = false) {
+		return $this->request($params, $url, 'POST', $contenttype, $user, $password, $raw);
 	}
 
 	/**
 	 * Convenience method wrapping a commom PUT call
 	 */
-	public function put($params = null, $url = null, $contenttype = 'application/x-www-form-urlencoded', $user = null, $password = null) {
-		return $this->request($params, $url, 'PUT', $contenttype, $user, $password);
+	public function put($params = null, $url = null, $contenttype = 'application/x-www-form-urlencoded', $user = null, $password = null, $raw = false) {
+		return $this->request($params, $url, 'PUT', $contenttype, $user, $password, $raw);
 	}
 
 	/**
 	 * Convenience method wrapping a commom GET call
 	 */
-	public function get($params = null, $url = null, $contenttype = null, $user = null, $password = null) {
-		return $this->request($params, $url, 'GET', $contenttype, $user, $password);
+	public function get($params = null, $url = null, $contenttype = null, $user = null, $password = null, $raw = false) {
+		return $this->request($params, $url, 'GET', $contenttype, $user, $password, $raw);
 	}
 
 	/**
-	 * Convenience method wrapping a commom delete call
+	 * Convenience method wrapping a commom DELETE call
 	 */
-	public function delete($params = null, $url = null, $contenttype = 'application/x-www-form-urlencoded', $user = null, $password = null) {
-		return $this->request($params, $url, 'DELETE', $contenttype, $user, $password);
+	public function delete($params = null, $url = null, $contenttype = 'application/x-www-form-urlencoded', $user = null, $password = null, $raw = false) {
+		return $this->request($params, $url, 'DELETE', $contenttype, $user, $password, $raw);
 	}
 
 	/**
