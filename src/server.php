@@ -379,6 +379,20 @@ abstract class Server {
 			case 'object':
 				return is_object($value) ? $value : null;
 
+			case 'json':
+				try {
+					if ( (string)$value === '' )
+						return null;
+
+					$result = @json_decode('['.$value.']', true);
+					if ( empty($result) or !is_array($result) )
+						throw new Exception('Invalid JSON data: '.( strlen($value) > 100 ? substr($value, 0, 97).'...' : '' ));
+
+					return $result[0];
+				} catch (Exception $e) {
+					throw $e;
+				}
+
 			case false:
 				return $value;
 
