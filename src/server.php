@@ -10,12 +10,12 @@ if ( !defined('UPLOAD_ERR_CANT_WRITE') ) // Introduced in PHP 5.1.0
 if ( !defined('UPLOAD_ERR_EXTENSION') ) // Introduced in PHP 5.2.0
 	define('UPLOAD_ERR_EXTENSION', 8);
 
-	
+
 // Define Exception Class
 if (!class_exists('\REST\Exception')) {
 	class Exception extends \Exception { }
 }
-	
+
 /**
  * Returns an error trace
  *
@@ -201,7 +201,7 @@ class Cryptastic {
  *
  * @see RESTserver
  */
-class voidResult {
+class VoidResult {
 }
 
 /**
@@ -449,7 +449,7 @@ abstract class Server {
 
 		// Check if the result should be wrapped into a JSON-encoded object
 		// (by "runJSON()").
-		if ( $res instanceof voidResult )
+		if ( $res instanceof VoidResult )
 			return null;
 
 		return (is_array($res) && (isset($res['result']) || isset($res['error']))) ? $res : array('result' => $res);
